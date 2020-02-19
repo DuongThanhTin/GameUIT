@@ -26,6 +26,7 @@
 #include "Game.h"
 #include "GameObject.h"
 #include "Textures.h"
+#include "TileMap.h"
 
 #include "Simon.h"
 #include "Brick.h"
@@ -33,6 +34,7 @@
 
 #define WINDOW_CLASS_NAME L"SampleWindow"
 #define MAIN_WINDOW_TITLE L"CastleVania"
+#define MAP_FILE L"textures\\map.json"
 
 #define BACKGROUND_COLOR D3DCOLOR_XRGB(255, 255, 200)
 #define SCREEN_WIDTH 320
@@ -44,10 +46,14 @@
 #define ID_TEX_ENEMY 10
 #define ID_TEX_MISC 20
 
+
+
 CGame *game;
 
 CSimon *simon;
 CGoomba *goomba;
+CTileSet *tileSet;
+CTileMap *tileMap;
 
 vector<LPGAMEOBJECT> objects;
 
@@ -121,6 +127,12 @@ LRESULT CALLBACK WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 void LoadResources()
 {
 	CTextures * textures = CTextures::GetInstance();
+	
+	tileMap = new CTileMap();
+	tileSet = new CTileSet();
+	tileSet->LoadFromFile(L"textures\\map.json");
+	tileMap->LoadFromFile(L"textures\\map.json");
+	
 
 	textures->Add(ID_TEX_SIMON, L"textures\\simon.png", D3DCOLOR_XRGB(255, 0, 255));
 	textures->Add(ID_TEX_MISC, L"textures\\misc.png", D3DCOLOR_XRGB(176, 224, 248));
@@ -149,8 +161,8 @@ void LoadResources()
 	sprites->Add(10015, 132, 8, 147, 39, texSimon);
 
 	sprites->Add(10020, 106, 53, 130, 82, texSimon,0); //idle attack left
-	sprites->Add(10021, 152, 53, 170, 82, texSimon, 0, { 0, 0 });
-	sprites->Add(10022, 197, 53, 220, 82, texSimon,0, { 0,0 });
+	sprites->Add(10021, 152, 53, 170, 82, texSimon, 0, { -2, 0 });
+	sprites->Add(10022, 197, 53, 220, 82, texSimon,0, { -7,0 });
 
 	sprites->Add(10025, 106, 53, 130, 82, texSimon, 1); //idle attack right
 	sprites->Add(10026, 152, 53, 170, 82, texSimon, 1);
@@ -274,7 +286,7 @@ void LoadResources()
 	}
 
 
-	for (int i = 0; i < 30; i++)
+	for (int i = 0; i < 40; i++)
 	{
 		CBrick *brick = new CBrick();
 		brick->AddAnimation(601);
@@ -326,6 +338,7 @@ void Update(DWORD dt)
 	CGame::GetInstance()->SetCamPos(cx, 0.0f /*cy*/);
 }
 
+
 /*
 	Render a frame 
 */
@@ -341,9 +354,12 @@ void Render()
 		d3ddv->ColorFill(bb, NULL, BACKGROUND_COLOR);
 
 		spriteHandler->Begin(D3DXSPRITE_ALPHABLEND);
-
+		tileMap->Draw({ 0,0 });
 		for (int i = 0; i < objects.size(); i++)
 			objects[i]->Render();
+
+		//TileMap
+
 
 		spriteHandler->End();
 		d3ddv->EndScene();
