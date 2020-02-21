@@ -132,6 +132,7 @@
     <ClInclude Include="Sprites.h" />
     <ClInclude Include="Textures.h" />
     <ClInclude Include="TileMap.h" />
+    <ClInclude Include="ViewPort.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Brick.cpp" />
@@ -144,6 +145,7 @@
     <ClCompile Include="Sprites.cpp" />
     <ClCompile Include="Textures.cpp" />
     <ClCompile Include="TileMap.cpp" />
+    <ClCompile Include="ViewPort.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

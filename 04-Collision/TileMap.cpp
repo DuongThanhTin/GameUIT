@@ -28,9 +28,9 @@ void CTileSet::LoadFromFile(LPCWSTR filePath)
 	//DebugOut(L"[INFO] imagePath OK: %d\n", imagePath);
 	/*int tileWidth = 16;
 	int tileHeight = 16;
-	int numOfColumn = 11;
+	int columnNumber = 11;
 	int tileCount = 165;
-	int numOfRow = 15;
+	int rowNumber = 15;
 	LPCWSTR imagePath = L"textures\\mapFile_bank.png";*/
 
 	// Add list tiles
@@ -84,6 +84,7 @@ std::wstring s2ws(const std::string& s)
 	return r;
 }
 
+
 CTileMap::CTileMap()
 {
 	tileSet = new CTileSet();
@@ -117,8 +118,8 @@ void CTileMap::LoadFromFile(LPCWSTR filePath)
 			int tmp = i * columnNumber + j;
 			mapData[i][j] = data[tmp];
 			//Debug
-			DebugOut(L"Mapdata :%d\n", mapData[i][j]);
-			DebugOut(L"tmp :%d\n", tmp);
+			//DebugOut(L"Mapdata :%d\n", mapData[i][j]);
+		//	DebugOut(L"tmp :%d\n", tmp);
 		}
 	}
 
@@ -132,14 +133,16 @@ void CTileMap::LoadFromFile(LPCWSTR filePath)
 
 void CTileMap::Draw(D3DXVECTOR2 position)
 {
+	CViewPort * viewport = CViewPort::GetInstance();
 
 	for (int i = 0; i < 11; i++) // rowNumber
 	{
-		for (int j = 0; j < 50; j++) // ColumnNumber
+		for (int j = 0; j < 60; j++) // ColumnNumber
 		{
 			D3DXVECTOR2 pos;
-			pos.x = position.x + j * tileSet->GetTileWidth();
-			pos.y = position.y + i * tileSet->GetTileHeight();
+			pos.x = int (position.x + j * tileSet->GetTileWidth());
+			pos.y = int (position.y + i * tileSet->GetTileHeight());
+			pos = CViewPort::GetInstance()->ConvertWorldToViewPort(pos);
 			tileSet->DrawTile(mapData[i][j], pos);
 		}
 	}

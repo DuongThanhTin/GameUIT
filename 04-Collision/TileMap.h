@@ -9,6 +9,7 @@
 #include "Sprites.h"
 #include "Textures.h"
 #include "Game.h"
+#include "ViewPort.h"
 
 using json = nlohmann::json;
 

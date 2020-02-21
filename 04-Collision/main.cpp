@@ -27,6 +27,7 @@
 #include "GameObject.h"
 #include "Textures.h"
 #include "TileMap.h"
+#include "ViewPort.h"
 
 #include "Simon.h"
 #include "Brick.h"
@@ -54,6 +55,7 @@ CSimon *simon;
 CGoomba *goomba;
 CTileSet *tileSet;
 CTileMap *tileMap;
+CViewPort *viewport;
 
 vector<LPGAMEOBJECT> objects;
 
@@ -128,6 +130,7 @@ void LoadResources()
 {
 	CTextures * textures = CTextures::GetInstance();
 	
+	viewport = CViewPort::GetInstance();
 	tileMap = new CTileMap();
 	tileSet = new CTileSet();
 	tileSet->LoadFromFile(L"textures\\map.json");
@@ -300,7 +303,7 @@ void LoadResources()
 		goomba = new CGoomba();
 		goomba->AddAnimation(701);
 		goomba->AddAnimation(702);
-		goomba->SetPosition(200 + i*60, 135);
+		//goomba->SetPosition(200 + i*60, 135);
 		goomba->SetState(GOOMBA_STATE_WALKING);
 		objects.push_back(goomba);
 	}
@@ -316,6 +319,7 @@ void Update(DWORD dt)
 	// We know that Mario is the first object in the list hence we won't add him into the colliable object list
 	// TO-DO: This is a "dirty" way, need a more organized way 
 
+	D3DXVECTOR2 playerPosition;
 	vector<LPGAMEOBJECT> coObjects;
 	for (int i = 1; i < objects.size(); i++)
 	{
@@ -330,12 +334,14 @@ void Update(DWORD dt)
 
 	// Update camera to follow mario
 	float cx, cy;
-	simon->GetPosition(cx, cy);
-
-	cx -= SCREEN_WIDTH / 2;
-	cy -= SCREEN_HEIGHT / 2;
-
-	CGame::GetInstance()->SetCamPos(cx, 0.0f /*cy*/);
+//	simon->GetPosition(cx, cy);
+//	cx -= SCREEN_WIDTH / 2;
+//	cy -= SCREEN_HEIGHT / 2;
+//	CGame::GetInstance()->SetCamPos(cx, 0.0f );
+	simon->GetPosition(playerPosition.x, playerPosition.y);
+	//playerPosition.x -= SCREEN_WIDTH / 2;
+	viewport->Update(playerPosition);
+	CGame::GetInstance()->SetCamPos(playerPosition.x-SCREEN_WIDTH/2, 0.0f);
 }
 
 

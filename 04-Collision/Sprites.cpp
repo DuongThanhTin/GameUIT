@@ -53,6 +53,10 @@ void CAnimation::Add(int spriteId, DWORD time)
 
 void CAnimation::Render(float x, float y, int alpha)
 {
+	CViewPort* viewport = CViewPort::GetInstance();
+	x = viewport->ConvertWorldToViewPort({ x,y }).x;
+	y = viewport->ConvertWorldToViewPort({ x,y }).y;
+
 	DWORD now = GetTickCount();
 	if (currentFrame == -1) 
 	{
