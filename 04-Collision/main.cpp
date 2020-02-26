@@ -28,6 +28,7 @@
 #include "Textures.h"
 #include "TileMap.h"
 #include "ViewPort.h"
+#include "HeaderInfo.h"
 
 #include "Simon.h"
 #include "Brick.h"
@@ -38,8 +39,8 @@
 #define MAP_FILE L"textures\\map.json"
 
 #define BACKGROUND_COLOR D3DCOLOR_XRGB(255, 255, 200)
-#define SCREEN_WIDTH 320
-#define SCREEN_HEIGHT 240
+#define SCREEN_WIDTH 256
+#define SCREEN_HEIGHT 274
 
 #define MAX_FRAME_RATE 120
 
@@ -56,6 +57,7 @@ CGoomba *goomba;
 CTileSet *tileSet;
 CTileMap *tileMap;
 CViewPort *viewport;
+CHeaderInfo* headerinfo;
 
 vector<LPGAMEOBJECT> objects;
 
@@ -74,14 +76,15 @@ void CSampleKeyHander::OnKeyDown(int KeyCode)
 	switch (KeyCode)
 	{
 	case DIK_SPACE:
-		simon->SetState(SIMON_STATE_JUMP);
+		if (simon->GetState() != SIMON_STATE_JUMP && simon->GetState() != SIMON_STATE_ATTACK)
+			simon->StartJump();
 		break;
 	case DIK_X:
-		simon->SetState(SIMON_STATE_ATTACK);
+		simon->StartAttack();
 		break;
 	case DIK_A: // reset
 		simon->SetState(SIMON_STATE_IDLE);
-		simon->SetLevel(MARIO_LEVEL_BIG);
+	
 		simon->SetPosition(50.0f,0.0f);
 		simon->SetSpeed(0, 0);
 		break;
@@ -97,12 +100,17 @@ void CSampleKeyHander::OnKeyUp(int KeyCode)
 void CSampleKeyHander::KeyState(BYTE *states)
 {
 	// disable control key when Mario die 
-	if (simon->GetState() == SIMON_STATE_DIE) return;
+	if (simon->GetState() == SIMON_STATE_DIE)
+		return;
+	if (simon->GetAttackStart() > 0 || simon->GetJumpStart() > 0)
+		return;
+
 	if (game->IsKeyDown(DIK_RIGHT))
 		simon->SetState(SIMON_STATE_WALKING_RIGHT);
 	else if (game->IsKeyDown(DIK_LEFT))
 		simon->SetState(SIMON_STATE_WALKING_LEFT);
-	
+	else if (game->IsKeyDown(DIK_DOWN))
+		simon->SetState(SIMON_STATE_SIT);
 	else
 		simon->SetState(SIMON_STATE_IDLE);
 }
@@ -150,30 +158,6 @@ void LoadResources()
 	
 	LPDIRECT3DTEXTURE9 texSimon = textures->Get(ID_TEX_SIMON);
 
-	//sprites->Add(10001, 105, 8, 121, 39, texSimon);		// idle right
-	sprites->Add(10001, 105, 8, 121, 39, texSimon, 1);
-	sprites->Add(10002, 105, 8, 121, 39, texSimon, 1);		// walk
-	sprites->Add(10003, 132, 8, 147, 39, texSimon, 1);
-	sprites->Add(10004, 160, 8, 176, 39, texSimon, 1);
-	sprites->Add(10005, 132, 8, 147, 39, texSimon, 1);
-
-	sprites->Add(10011, 105, 8, 121, 39, texSimon);		// idle left
-	sprites->Add(10012, 105, 8, 121, 39, texSimon);		// walk
-	sprites->Add(10013, 132, 8, 147, 39, texSimon);
-	sprites->Add(10014, 160, 8, 176, 39, texSimon);
-	sprites->Add(10015, 132, 8, 147, 39, texSimon);
-
-	sprites->Add(10020, 106, 53, 130, 82, texSimon,0); //idle attack left
-	sprites->Add(10021, 152, 53, 170, 82, texSimon, 0, { -2, 0 });
-	sprites->Add(10022, 197, 53, 220, 82, texSimon,0, { -7,0 });
-
-	sprites->Add(10025, 106, 53, 130, 82, texSimon, 1); //idle attack right
-	sprites->Add(10026, 152, 53, 170, 82, texSimon, 1);
-	sprites->Add(10027, 197, 53, 130, 221, texSimon, 1);
-
-//	sprites->Add(10099, 215, 120, 231, 135, texSimon);		// die
-	sprites->Add(10099, 313, 23, 345, 37, texSimon);		// die
-
 	LPDIRECT3DTEXTURE9 texMisc = textures->Get(ID_TEX_MISC);
 	sprites->Add(20001, 408, 225, 424, 241, texMisc);
 
@@ -184,60 +168,6 @@ void LoadResources()
 	sprites->Add(30003, 45, 21, 61, 29, texEnemy); // die sprite
 
 	LPANIMATION ani;
-
-	ani = new CAnimation(100);	// idle big right
-	ani->Add(10001);
-	animations->Add(400, ani);
-
-	ani = new CAnimation(100);	// idle big left
-	ani->Add(10011);
-	animations->Add(401, ani);
-
-	ani = new CAnimation(100);	// idle small right
-	ani->Add(10021);
-	animations->Add(402, ani);
-
-	ani = new CAnimation(100);	// idle small left
-	ani->Add(10031);
-	animations->Add(403, ani);
-
-	ani = new CAnimation(100);	// walk right big
-	ani->Add(10001);
-	ani->Add(10002);
-	ani->Add(10003);
-	animations->Add(500, ani);
-
-	ani = new CAnimation(100);	// // walk left big
-	ani->Add(10011);
-	ani->Add(10012);
-	ani->Add(10013);
-	animations->Add(501, ani);
-
-	ani = new CAnimation(100);	// walk right small
-	ani->Add(10021);
-	ani->Add(10022);
-	ani->Add(10023);
-	animations->Add(502, ani);
-
-	ani = new CAnimation(100);	// walk left small
-	ani->Add(10031);
-	ani->Add(10032);
-	ani->Add(10033);
-	animations->Add(503, ani);
-
-	ani = new CAnimation(100);		// Simon attack left
-	ani->Add(10020);
-	ani->Add(10021);
-	ani->Add(10022);
-	animations->Add(600, ani);
-
-
-
-	ani = new CAnimation(100);		// Simon die
-	ani->Add(10099);
-	animations->Add(599, ani);
-
-	
 
 	ani = new CAnimation(100);		// brick
 	ani->Add(20001);
@@ -252,22 +182,113 @@ void LoadResources()
 	ani->Add(30003);
 	animations->Add(702, ani);
 
+	sprites->Add(10001, 105, 8, 121, 39, texSimon, 1, { 0, 0 });		// simon idle right
+	sprites->Add(10002, 105, 8, 121, 39, texSimon, 1, { 0, 0 });		// simon walk right
+	sprites->Add(10003, 132, 8, 147, 39, texSimon, 1, { 0, 0 });
+	sprites->Add(10004, 160, 8, 176, 39, texSimon, 1, { 0, 0 });
+	sprites->Add(10005, 132, 8, 147, 39, texSimon, 1, { 0, 0 });
+
+	sprites->Add(10011, 105, 8, 121, 39, texSimon);						// simon idle left
+	sprites->Add(10012, 105, 8, 121, 39, texSimon);						// simon walk left
+	sprites->Add(10013, 132, 8, 147, 39, texSimon);
+	sprites->Add(10014, 160, 8, 176, 39, texSimon);
+	sprites->Add(10015, 132, 8, 147, 39, texSimon);
+
+	sprites->Add(10021, 100, 52, 130, 83, texSimon, 1, { -8, 0 });		// simon attack right
+	sprites->Add(10022, 148, 52, 178, 83, texSimon, 1, { -8, 0 });
+	sprites->Add(10023, 198, 52, 228, 83, texSimon, 1, { -8, 0 });
+
+	sprites->Add(10031, 100, 52, 130, 83, texSimon, 0, { -6, 0 });		// simon attack left
+	sprites->Add(10032, 148, 52, 178, 83, texSimon, 0, { -6, 0 });
+	sprites->Add(10033, 198, 52, 228, 83, texSimon, 0, { -6, 0 });
+
+	sprites->Add(10041, 187, 15, 204, 39, texSimon, 1, { 0, 0 });		// simon sit right
+
+	sprites->Add(10051, 187, 15, 204, 39, texSimon, 0, { 0, 0 });		// simon sit left
+
+	sprites->Add(10061, 350, 129, 375, 153, texSimon, 1, { 0, 0 });		// simon sit attack right
+	sprites->Add(10062, 325, 120, 343, 154, texSimon, 1, { 0, 0 });
+	sprites->Add(10063, 293, 130, 314, 153, texSimon, 1, { 0, 0 });
+
+	sprites->Add(10071, 350, 129, 375, 153, texSimon, 0, { 0, 0 });		// simon sit attack left
+	sprites->Add(10072, 325, 120, 343, 154, texSimon, 0, { 0, 0 });
+	sprites->Add(10073, 293, 130, 314, 153, texSimon, 0, { 0, 0 });
+
+	sprites->Add(10099, 215, 120, 231, 135, texSimon);					// simon die
+
+	ani = new CAnimation(100);		// idle right
+	ani->Add(10001);
+	animations->Add(100, ani);
+
+	ani = new CAnimation(100);		// idle left
+	ani->Add(10011);
+	animations->Add(101, ani);
+
+	ani = new CAnimation(100);		// walk right
+	ani->Add(10002);
+	ani->Add(10003);
+	ani->Add(10004);
+	ani->Add(10005);
+	animations->Add(102, ani);
+
+	ani = new CAnimation(100);		// walk left
+	ani->Add(10012);
+	ani->Add(10013);
+	ani->Add(10014);
+	ani->Add(10015);
+	animations->Add(103, ani);
+
+	ani = new CAnimation(100);		// simon attack right
+	ani->Add(10021);
+	ani->Add(10022);
+	ani->Add(10023);
+	animations->Add(104, ani);
+
+	ani = new CAnimation(100);		// simon attack left
+	ani->Add(10031);
+	ani->Add(10032);
+	ani->Add(10033);
+	animations->Add(105, ani);
+
+	ani = new CAnimation(100);		// simon sit right
+	ani->Add(10041);
+	animations->Add(106, ani);
+
+	ani = new CAnimation(100);		// simon sit left
+	ani->Add(10051);
+	animations->Add(107, ani);
+
+	ani = new CAnimation(100);		// simon sit attack right
+	ani->Add(10061);
+	ani->Add(10062);
+	ani->Add(10063);
+	animations->Add(108, ani);
+
+	ani = new CAnimation(100);		// simon sit attack left
+	ani->Add(10071);
+	ani->Add(10072);
+	ani->Add(10073);
+	animations->Add(109, ani);
+
+	ani = new CAnimation(100);		// simon die
+	ani->Add(10099);
+	animations->Add(110, ani);
+
+
+
 	simon = new CSimon();
-	simon->AddAnimation(400);		// idle right big
-	simon->AddAnimation(401);		// idle left big
-	simon->AddAnimation(402);		// idle right small
-	simon->AddAnimation(403);		// idle left small
-
-	simon->AddAnimation(500);		// walk right big
-	simon->AddAnimation(501);		// walk left big
-	simon->AddAnimation(502);		// walk right small
-	simon->AddAnimation(503);		// walk left big
-
-	simon->AddAnimation(599);		// die
-
-	simon->AddAnimation(600);		// attack
-
-	simon->SetPosition(50.0f, 0);
+	simon->AddAnimation(100);		// idle right			0
+	simon->AddAnimation(101);		// idle left			1
+	simon->AddAnimation(102);		// walk right			2
+	simon->AddAnimation(103);		// walk left			3
+	simon->AddAnimation(104);		// attack right			4
+	simon->AddAnimation(105);		// attack left			5
+	simon->AddAnimation(106);		// sit right			6
+	simon->AddAnimation(107);		// sit left				7
+	simon->AddAnimation(108);		// sit attack right		8
+	simon->AddAnimation(109);		// sit attack left		9
+	simon->AddAnimation(110);		// die					10
+	simon->SetPosition(30.0f, 143.0f);
 	objects.push_back(simon);
 
 	for (int i = 0; i < 5; i++)
@@ -303,11 +324,15 @@ void LoadResources()
 		goomba = new CGoomba();
 		goomba->AddAnimation(701);
 		goomba->AddAnimation(702);
-		//goomba->SetPosition(200 + i*60, 135);
+	//	goomba->SetPosition(200 + i*60, 135);
 		goomba->SetState(GOOMBA_STATE_WALKING);
 		objects.push_back(goomba);
 	}
 
+	for (auto iter : objects)
+		iter->AddPosition(0, 0);
+	headerinfo = new CHeaderInfo();
+	
 }
 
 /*
@@ -338,10 +363,10 @@ void Update(DWORD dt)
 //	cx -= SCREEN_WIDTH / 2;
 //	cy -= SCREEN_HEIGHT / 2;
 //	CGame::GetInstance()->SetCamPos(cx, 0.0f );
-	simon->GetPosition(playerPosition.x, playerPosition.y);
+	simon->GetPosition(playerPosition.x, playerPosition.y);	
 	//playerPosition.x -= SCREEN_WIDTH / 2;
-	viewport->Update(playerPosition);
-	CGame::GetInstance()->SetCamPos(playerPosition.x-SCREEN_WIDTH/2, 0.0f);
+	viewport->Update(playerPosition,tileMap->GetWidthStart(playerPosition.y),tileMap->GetWidthEnd(playerPosition.y));
+	//CGame::GetInstance()->SetCamPos(playerPosition.x-SCREEN_WIDTH/2, 0.0f);
 }
 
 
@@ -360,12 +385,14 @@ void Render()
 		d3ddv->ColorFill(bb, NULL, BACKGROUND_COLOR);
 
 		spriteHandler->Begin(D3DXSPRITE_ALPHABLEND);
-		tileMap->Draw({ 0,0 });
-		for (int i = 0; i < objects.size(); i++)
-			objects[i]->Render();
 
 		//TileMap
-
+		tileMap->Draw({ 0,0 });
+		
+		for (int i = 0; i < objects.size(); i++)
+			objects[i]->Render();
+		simon->Render();
+		headerinfo->Draw({ 0,0 });
 
 		spriteHandler->End();
 		d3ddv->EndScene();

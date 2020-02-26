@@ -17,7 +17,9 @@ public:
 	D3DXVECTOR2 GetPosition();
 	D3DXVECTOR2 ConvertWorldToViewPort(D3DXVECTOR2 worldPosition);
 	D3DXVECTOR2 ConvertViewPortToWorld(D3DXVECTOR2 viewportPosition);
-	void Update(D3DXVECTOR2 playerPosition);
+	void Update(D3DXVECTOR2 playerPosition, int startPosition, int endPosition);
+	int GetWidth() { return width; }
+	int GetHeight() { return height; }
 	static CViewPort* GetInstance();
 	~CViewPort();
 };

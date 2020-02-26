@@ -25,7 +25,11 @@ CSprites *CSprites::GetInstance()
 void CSprite::Draw(float x, float y, int alpha)
 {
 	CGame * game = CGame::GetInstance();
-	game->Draw(x + position.x, y + position.y, texture, left, top, right, bottom, alpha, isFlipImage);
+	int xTmp = x + position.x;
+	int yTmp = y + position.y - (bottom - top);
+
+	game->Draw(xTmp, yTmp, texture, left, top, right, bottom, alpha, isFlipImage);
+	//game->Draw(x + position.x, y + position.y, texture, left, top, right, bottom, alpha, isFlipImage);
 }
 
 void CSprites::Add(int id, int left, int top, int right, int bottom, LPDIRECT3DTEXTURE9 tex, int isFlipImage, D3DXVECTOR2 position )
@@ -53,15 +57,22 @@ void CAnimation::Add(int spriteId, DWORD time)
 
 void CAnimation::Render(float x, float y, int alpha)
 {
+	//ViewPort
 	CViewPort* viewport = CViewPort::GetInstance();
 	x = viewport->ConvertWorldToViewPort({ x,y }).x;
 	y = viewport->ConvertWorldToViewPort({ x,y }).y;
+	isFinished = false;
 
 	DWORD now = GetTickCount();
 	if (currentFrame == -1) 
 	{
 		currentFrame = 0; 
 		lastFrameTime = now;
+		if (currentFrame == frames.size())
+		{
+			currentFrame = 0;
+			isFinished = true;
+		}
 	}
 	else
 	{
@@ -76,6 +87,13 @@ void CAnimation::Render(float x, float y, int alpha)
 	}
 
 	frames[currentFrame]->GetSprite()->Draw(x, y, alpha);
+}
+
+void CAnimation::Render(float x, float y, int frame, int alpha)
+{
+	if (frame == -1 || frame == frames.size())
+		frame = 0;
+	frames[frame]->GetSprite()->Draw(x, y);
 }
 
 CAnimations * CAnimations::__instance = NULL;
@@ -95,3 +113,5 @@ LPANIMATION CAnimations::Get(int id)
 {
 	return animations[id];
 }
+
+

@@ -1,6 +1,7 @@
-#include "Tilemap.h"
+﻿#include "Tilemap.h"
 std::wstring s2ws(const std::string& s);
 #define ID_TEX_TILESET_01 -10
+#define HUD_HEIGHT			50
 
 CTileSet::CTileSet()
 {
@@ -43,7 +44,7 @@ void CTileSet::LoadFromFile(LPCWSTR filePath)
 			
 			//Debug
 			DebugOut(L"[INFO] tmpID OK: %d\n", tmpID);
-		}
+		} 
 
 	// Add texture
 	CTextures::GetInstance()->Add(ID_TEX_TILESET_01, imagePath, 0);
@@ -96,38 +97,38 @@ void CTileMap::LoadFromFile(LPCWSTR filePath)
 	ifstream file(filePath);
 	json j = json::parse(file);
 
-	//rowNumber = j["/layers/0/height"_json_pointer].get<int>();
-	//columnNumber = j["/layers/0/width"_json_pointer].get<int>();
-	//vector<int> data = j["/layers/0/data"_json_pointer].get<vector<int>>();
-	rowNumber = j["layers"][0]["height"].get<int>();
-	columnNumber = j["layers"][0]["width"].get<int>();
+	
+	//rowNumber = j["layers"][0]["height"].get<int>();
+	//columnNumber = j["layers"][0]["width"].get<int>();
+
 	vector<int> data = j["layers"][0]["data"].get<vector<int>>();
+	rowMapNumber = j["layers"][0]["height"].get<int>();
+	columnMapNumber = j["layers"][0]["width"].get<int>();
+	widthEdge = j["layers"][0]["edge"].get<vector<vector<int>>>();
 
 	//DebugOut
 	DebugOut(L"rowNumber: %d\n ", rowNumber);
-	DebugOut(L"columnNumber: %d\n ", columnNumber);
+	DebugOut(L"columnMapNumber: %d\n ", columnMapNumber);
+	DebugOut(L"widthEdge: %d\n ", widthEdge);
 
 	// Map data from vector to matrix	
-	mapData = new int*[rowNumber];
-	for (int i = 0; i < rowNumber; i++)
+	mapData = new int*[rowMapNumber];
+	for (int i = 0; i < rowMapNumber; i++)
 	{
-		mapData[i] = new int[columnNumber];
+		mapData[i] = new int[columnMapNumber];
 		
-		for (int j = 0; j < columnNumber; j++)
+		for (int j = 0; j < columnMapNumber; j++)
 		{
-			int tmp = i * columnNumber + j;
+			int tmp = i * columnMapNumber + j;
 			mapData[i][j] = data[tmp];
-			//Debug
-			//DebugOut(L"Mapdata :%d\n", mapData[i][j]);
-		//	DebugOut(L"tmp :%d\n", tmp);
 		}
 	}
 
 	// Load tileset
 	tileSet->LoadFromFile(filePath);
 
-	for (int i = 0; i < rowNumber; i++)
-		for (int j = 0; j < columnNumber; j++)
+	for (int i = 0; i < rowMapNumber; i++)
+		for (int j = 0; j < columnMapNumber; j++)
 			DebugOut(L"%d, ", mapData[i][j]);
 }
 
@@ -135,7 +136,7 @@ void CTileMap::Draw(D3DXVECTOR2 position)
 {
 	CViewPort * viewport = CViewPort::GetInstance();
 
-	for (int i = 0; i < 11; i++) // rowNumber
+	/*for (int i = 0; i < 11; i++) // rowNumber
 	{
 		for (int j = 0; j < 60; j++) // ColumnNumber
 		{
@@ -145,5 +146,38 @@ void CTileMap::Draw(D3DXVECTOR2 position)
 			pos = CViewPort::GetInstance()->ConvertWorldToViewPort(pos);
 			tileSet->DrawTile(mapData[i][j], pos);
 		}
+	}*/
+
+	//Vẽ map khi camera di chuyển
+	
+	/*int hStart = 0;
+	int hEnd = 10;
+	int wStart = 0;
+	int wEnd = 20;*/
+	int wStart = viewport->GetPosition().x / tileSet->GetTileWidth();
+	int hStart = viewport->GetPosition().y / tileSet->GetTileHeight();
+	int wEnd = wStart + viewport->GetWidth() / tileSet->GetTileWidth();
+	int hEnd = hStart + viewport->GetHeight() / tileSet->GetTileHeight();
+
+	for (int i = hStart; i < hEnd; i++)
+	{
+		for (int j = wStart; j < wEnd; j++)
+		{
+			D3DXVECTOR2 pos;
+			pos.x = position.x + j * tileSet->GetTileWidth();
+			pos.y = position.y + i * tileSet->GetTileHeight() + HUD_HEIGHT;
+			pos = CViewPort::GetInstance()->ConvertWorldToViewPort(pos);
+			tileSet->DrawTile(mapData[i][j], pos);
+		}
 	}
+}
+
+int CTileMap::GetWidthStart(int playerPosX)
+{
+	return widthEdge[(playerPosX - HUD_HEIGHT) / 176][0] * tileSet->GetTileWidth();
+}
+
+int CTileMap::GetWidthEnd(int playerPosX)
+{
+	return widthEdge[(playerPosX - 40) / 176][1] * tileSet->GetTileWidth();
 }

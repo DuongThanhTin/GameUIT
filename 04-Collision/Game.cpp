@@ -55,12 +55,13 @@ void CGame::Init(HWND hWnd)
 /*
 	Utility function to wrap LPD3DXSPRITE::Draw 
 */
-void CGame::Draw(float x, float y, LPDIRECT3DTEXTURE9 texture, int left, int top, int right, int bottom, int alpha, int isFlipImage)
+void CGame::Draw(float x, float y, LPDIRECT3DTEXTURE9 texture, float left, float top, float right, float bottom, int alpha, int isFlipImage)
 {
 
 //D3DXVECTOR3 p(floor(x), floor(y), 0); // https://docs.microsoft.com/vi-vn/windows/desktop/direct3d9/directly-mapping-texels-to-pixels
 // Try removing floor() to see blurry Mario
-	D3DXVECTOR3 p(floor(x-cam_x), floor(y - cam_y), 0);
+	//D3DXVECTOR3 p(floor(x-cam_x), floor(y - cam_y), 0);
+	D3DXVECTOR3 p(int(x),int(y), 0);
 	RECT r;
 	r.left = left;
 	r.top = top;
@@ -80,6 +81,11 @@ void CGame::Draw(float x, float y, LPDIRECT3DTEXTURE9 texture, int left, int top
 
 	spriteHandler->Draw(texture, &r, NULL, &p, D3DCOLOR_ARGB(alpha, 255, 255, 255));
 	spriteHandler->SetTransform(&mPre);
+}
+
+bool CGame::IsIntersect(RECT rectA, RECT rectB)
+{
+	return rectA.left < rectB.right && rectA.right > rectB.left && rectA.top < rectB.bottom && rectA.bottom > rectB.top;
 }
 
 int CGame::IsKeyDown(int KeyCode)

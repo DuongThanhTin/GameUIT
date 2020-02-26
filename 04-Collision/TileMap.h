@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <d3dx9.h>
 #include <d3d9.h>
 #include <fstream>
@@ -20,7 +20,7 @@ private:
 	int tileHeight;
 	int rowNumber;
 	int columnNumber;
-	map<int, RECT> listTile;
+	map<int, RECT> listTile; //chứa các danh sách TileSet
 	LPDIRECT3DTEXTURE9 texture;
 public:
 	CTileSet();
@@ -31,19 +31,25 @@ public:
 	~CTileSet();
 };
 
-typedef CTileSet* LPTILESHEET;
+typedef CTileSet* LPTILESET;
 
 class CTileMap
 {
 private:
 	int rowNumber;
 	int columnNumber;
-	LPTILESHEET tileSet;
+
+	int rowMapNumber;
+	int columnMapNumber;
+	LPTILESET tileSet;
+	vector<vector<int>> widthEdge;
 	int** mapData;
 public:
 	CTileMap();
 	void LoadFromFile(LPCWSTR filePath);
 	void Draw(D3DXVECTOR2 position);
+	int GetWidthStart(int playerPosition);
+	int GetWidthEnd(int playerPosition);
 	~CTileMap();
 };
 
